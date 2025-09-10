@@ -124,7 +124,13 @@ def create_app(config_class=Config):
 
     # Initialize extensions
     try:
+        # Initialize SQLAlchemy
         db.init_app(app)
+        
+        # Push an app context
+        app.app_context().push()
+        
+        # Initialize other extensions
         global jwt, mail
         jwt = JWTManager(app)
         mail = Mail(app)

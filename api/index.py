@@ -17,6 +17,13 @@ logger = logging.getLogger(__name__)
 # Initialize Flask app
 flask_app = create_app()
 
+# Push application context
+ctx = flask_app.app_context()
+ctx.push()
+
+# Initialize database connection
+db.init_app(flask_app)
+
 class handler(BaseHTTPRequestHandler):
     """Ultra-minimal Vercel handler - no imports, no classes, no WSGI"""
     def init_flask_env(self):
@@ -48,20 +55,25 @@ class handler(BaseHTTPRequestHandler):
 
     def handle_flask_response(self, response):
         """Handle Flask response and send it to client"""
-        status_code = response.status_code
-        self.send_response(status_code)
+        response_data = []
         
-        # Set headers
-        for header, value in response.headers.items():
-            self.send_header(header, value)
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-        self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-        self.end_headers()
+        def start_response(status, headers):
+            status_code = int(status.split()[0])
+            self.send_response(status_code)
+            for header, value in headers:
+                self.send_header(header, value)
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.send_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+            self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+            self.end_headers()
+        
+        # Get response from WSGI app
+        for data in response(self.environ, start_response):
+            response_data.append(data)
         
         # Send response body
-        if response.data:
-            self.wfile.write(response.data)
+        if response_data:
+            self.wfile.write(b''.join(response_data))
 
     def do_OPTIONS(self):
         """Handle CORS preflight requests"""
@@ -74,8 +86,8 @@ class handler(BaseHTTPRequestHandler):
         """Handle GET requests"""
         try:
             with flask_app.app_context():
-                environ = self.init_flask_env()
-                response = flask_app.wsgi_app(environ, lambda *args: None)
+                self.environ = self.init_flask_env()
+                response = flask_app.wsgi_app
                 self.handle_flask_response(response)
         except Exception as e:
             logger.error(f"GET request error: {str(e)}")
@@ -85,8 +97,8 @@ class handler(BaseHTTPRequestHandler):
         """Handle POST requests"""
         try:
             with flask_app.app_context():
-                environ = self.init_flask_env()
-                response = flask_app.wsgi_app(environ, lambda *args: None)
+                self.environ = self.init_flask_env()
+                response = flask_app.wsgi_app
                 self.handle_flask_response(response)
         except Exception as e:
             logger.error(f"POST request error: {str(e)}")
