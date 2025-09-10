@@ -3,7 +3,7 @@
 Bulletproof Vercel entry point - NO IMPORTS, NO CLASSES, NO ISSUES
 """
 
-def app(environ, start_response):
+def application(environ, start_response):
     """Ultra-simple WSGI function - pure Python only"""
     # Get path
     path = environ.get('PATH_INFO', '/') if environ else '/'
@@ -42,5 +42,5 @@ def app(environ, start_response):
     return [body.encode('utf-8')]
 
 # Alternative names for maximum compatibility
-application = app
-handler = app
+app = application
+handler = application
