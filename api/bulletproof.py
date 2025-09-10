@@ -9,10 +9,25 @@ class handler(BaseHTTPRequestHandler):
         self.send_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
         self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
         self.end_headers()
-        
-        response = {
-            'message': 'API is working',
-            'status': 'healthy',
-            'path': self.path
-        }
+
+        if '/api/courses/filters' in self.path:
+            response = {
+                'filters': {
+                    'levels': ['Beginner', 'Intermediate', 'Advanced'],
+                    'categories': ['Business', 'Technology', 'Personal Development']
+                },
+                'status': 'success'
+            }
+        elif '/api/courses' in self.path:
+            response = {
+                'courses': [],  # Empty array for now
+                'status': 'success',
+                'message': 'Courses retrieved successfully'
+            }
+        else:
+            response = {
+                'status': 'success',
+                'message': 'API is working'
+            }
+
         self.wfile.write(json.dumps(response).encode())
