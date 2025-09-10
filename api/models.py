@@ -2,7 +2,7 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import re
 
-db = SQLAlchemy()
+from api.database import db
 
 # Phone number validation regex
 PHONE_REGEX = r'^0(5|6|7)\d{8}$'

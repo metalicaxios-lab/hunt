@@ -124,8 +124,20 @@ def create_app(config_class=Config):
 
     # Initialize extensions
     try:
+        # Configure SQLAlchemy for serverless
+        app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+            'pool_size': 1,
+            'pool_timeout': 30,
+            'pool_recycle': 1800,
+            'pool_pre_ping': True
+        }
+        
         # Initialize SQLAlchemy
         db.init_app(app)
+        
+        # Push application context
+        ctx = app.app_context()
+        ctx.push()
         
         # Initialize other extensions
         global jwt, mail
@@ -135,17 +147,9 @@ def create_app(config_class=Config):
         # Attach mail to app instance for use in utils
         app.mail = mail
         
-        # Set up request context handling for SQLAlchemy
-        @app.before_request
-        def before_request_func():
-            if not hasattr(g, '_db_ctx'):
-                g._db_ctx = app.app_context()
-                g._db_ctx.push()
-            
         @app.teardown_appcontext
-        def teardown_db(exc):
-            if hasattr(g, '_db_ctx'):
-                g._db_ctx.pop(exc)
+        def shutdown_session(exception=None):
+            db.session.remove()
 
         # Register JWT error handlers
         register_jwt_error_handlers(jwt)
