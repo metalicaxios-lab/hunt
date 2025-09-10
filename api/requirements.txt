@@ -10,7 +10,7 @@ itsdangerous==2.1.2
 click==8.1.7
 Jinja2==3.1.2
 blinker==1.6.2
-
+requests
 # Database and Security
 PyMySQL==1.0.2
 cryptography==39.0.1
@@ -29,3 +29,4 @@ six==1.16.0
 
 # Development Tools
 python-dotenv==1.0.0
+
