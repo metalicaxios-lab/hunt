@@ -9,8 +9,7 @@ Flask-CORS==4.0.0
 PyMySQL==1.0.2
 cryptography==39.0.1
 
-# Image processing (for QR codes)
-Pillow==9.5.0
+# QR code generation (without PIL)
 qrcode==7.4.2
 
 # Password hashing
