@@ -9,7 +9,7 @@
       }
     },
     {
-      "src": "api/serverless.py",
+      "src": "api/app.py",
       "use": "@vercel/python",
       "config": {
         "runtime": "python3.11",
@@ -17,7 +17,6 @@
       }
     }
   ],
-  "buildCommand": "apt-get update && apt-get install -y libjpeg-dev zlib1g-dev && pip install -r api/requirements.txt",
   "routes": [
     {
       "handle": "filesystem"
@@ -33,20 +32,13 @@
       "continue": true
     },
     {
-      "src": "/api/courses/filters",
-      "dest": "/api/serverless.py?handler=get_course_filters"
-    },
-    {
-      "src": "/api/courses",
-      "dest": "/api/serverless.py?handler=get_courses"
-    },
-    {
-      "src": "/api/auth/login",
-      "dest": "/api/serverless.py?handler=login"
-    },
-    {
-      "src": "/api/courses/register",
-      "dest": "/api/serverless.py?handler=register_course"
+      "src": "/api/(.*)",
+      "dest": "/api/app.py",
+      "headers": {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization"
+      }
     },
     {
       "src": "/(.*)",
