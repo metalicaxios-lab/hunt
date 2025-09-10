@@ -1,15 +1,18 @@
 from http.server import BaseHTTPRequestHandler
-from urllib.parse import parse_qs
+import json
 
-def handler(request):
-    """Pure serverless function handler for Vercel"""
-    return {
-        'statusCode': 200,
-        'headers': {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, Authorization'
-        },
-        'body': '{"message":"API is working","status":"healthy"}'
-    }
+class handler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header('Content-Type', 'application/json')
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+        self.end_headers()
+        
+        response = {
+            'message': 'API is working',
+            'status': 'healthy',
+            'path': self.path
+        }
+        self.wfile.write(json.dumps(response).encode())
