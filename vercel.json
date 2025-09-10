@@ -1,0 +1,78 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
+    },
+    {
+      "src": "api/bulletproof.py",
+      "use": "@vercel/python",
+      "config": {
+        "runtime": "python3.11"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/assets/(.*)",
+      "headers": { "cache-control": "public, max-age=31536000, immutable" },
+      "continue": true
+    },
+    {
+      "src": "/(.*)\\.(?:ico|png|jpg|jpeg|gif|svg|webp)$",
+      "headers": { "cache-control": "public, max-age=31536000, immutable" },
+      "continue": true
+    },
+    {
+      "src": "/api/test",
+      "dest": "/api/bulletproof.py"
+    },
+    {
+      "src": "/api/health", 
+      "dest": "/api/bulletproof.py"
+    },
+    {
+      "src": "/api/courses/(.*)",
+      "dest": "/api/bulletproof.py"
+    },
+    {
+      "src": "/api/auth/(.*)",
+      "dest": "/api/bulletproof.py"
+    },
+    {
+      "src": "/api/admin/(.*)",
+      "dest": "/api/bulletproof.py"
+    },
+    {
+      "src": "/api/mobile/(.*)",
+      "dest": "/api/bulletproof.py"
+    },
+    {
+      "src": "/api/contact/(.*)",
+      "dest": "/api/bulletproof.py"
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/bulletproof.py"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production",
+    "PYTHONPATH": "api",
+    "FLASK_DEBUG": "False",
+    "VERCEL": "1",
+    "VERCEL_ENV": "production"
+  },
+  "installCommand": "npm install && pip install -r api/requirements.txt"
+}
