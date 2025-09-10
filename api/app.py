@@ -127,9 +127,6 @@ def create_app(config_class=Config):
         # Initialize SQLAlchemy
         db.init_app(app)
         
-        # Push an app context
-        app.app_context().push()
-        
         # Initialize other extensions
         global jwt, mail
         jwt = JWTManager(app)
@@ -137,6 +134,18 @@ def create_app(config_class=Config):
         
         # Attach mail to app instance for use in utils
         app.mail = mail
+        
+        # Set up request context handling for SQLAlchemy
+        @app.before_request
+        def before_request_func():
+            if not hasattr(g, '_db_ctx'):
+                g._db_ctx = app.app_context()
+                g._db_ctx.push()
+            
+        @app.teardown_appcontext
+        def teardown_db(exc):
+            if hasattr(g, '_db_ctx'):
+                g._db_ctx.pop(exc)
 
         # Register JWT error handlers
         register_jwt_error_handlers(jwt)

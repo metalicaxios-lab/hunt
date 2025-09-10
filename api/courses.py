@@ -204,12 +204,20 @@ def get_course(course_id):
 @courses_bp.route('/filters', methods=['GET'])
 def get_course_filters():
     """Get available course filters and categories"""
-    # Get unique categories
-    categories = db.session.query(Course.category).filter(Course.is_active == True).distinct().all()
-    categories = [cat[0] for cat in categories]
-
-    # Get pricing types
-    pricing_types = ['session', 'monthly']
+    try:
+        # Get unique categories
+        with db.session() as session:
+            categories = session.query(Course.category).filter(Course.is_active == True).distinct().all()
+            categories = [cat[0] for cat in categories if cat[0]]  # Filter out None values
+        
+        # Get pricing types
+        pricing_types = ['session', 'monthly']
+    except Exception as e:
+        logger.error(f"Error fetching course filters: {str(e)}")
+        return jsonify({
+            'error': 'Database Error',
+            'message': 'Failed to fetch course filters'
+        }), 500
 
     # Define detailed educational levels with specific grades
     levels = [
