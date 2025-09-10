@@ -1,73 +1,95 @@
-#!/usr/bin/env python3
-"""
-Vercel entry point - Minimal handler to avoid all class inspection issues
-"""
-
+from http.server import BaseHTTPRequestHandler
+from urllib.parse import parse_qs, urlparse
 import json
+import logging
 import os
-import sys
+from app import create_app
+from models import db, Course, Registration, Student, User, Parent, Class, Enrollment
 
-# Minimal response function that avoids any class-related imports
-def handler(request):
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Initialize Flask app
+flask_app = create_app()
+
+class handler(BaseHTTPRequestHandler):
     """Ultra-minimal Vercel handler - no imports, no classes, no WSGI"""
-    try:
-        # Extract path safely
-        if hasattr(request, 'method'):
-            method = str(request.method)
-            path = str(getattr(request, 'path', '/'))
-        elif isinstance(request, dict):
-            method = str(request.get('httpMethod', request.get('method', 'GET')))
-            path = str(request.get('path', request.get('rawPath', '/')))
-        else:
-            method = 'GET'
-            path = '/'
-
-        # Handle basic endpoints with hardcoded responses
-        if '/api/test' in path:
-            return {
-                'statusCode': 200,
-                'headers': {
-                    'Content-Type': 'application/json',
-                    'Access-Control-Allow-Origin': '*',
-                    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-                    'Access-Control-Allow-Headers': 'Content-Type, Authorization'
-                },
-                'body': '{"message": "Vercel API test endpoint working!", "status": "success", "method": "' + method + '", "path": "' + path + '"}'
-            }
-
-        elif '/api/health' in path:
-            return {
-                'statusCode': 200,
-                'headers': {
-                    'Content-Type': 'application/json',
-                    'Access-Control-Allow-Origin': '*'
-                },
-                'body': '{"status": "healthy", "message": "API health check passed", "service": "Laws of Success Academy API"}'
-            }
-
-        elif path == '/' or '/api' in path:
-            return {
-                'statusCode': 200,
-                'headers': {
-                    'Content-Type': 'application/json',
-                    'Access-Control-Allow-Origin': '*'
-                },
-                'body': '{"message": "Laws of Success Academy API", "status": "healthy", "version": "1.0.0"}'
-            }
-
-        # For complex endpoints, use delayed import to avoid class inspection
-        else:
-            return handle_complex_endpoint(path, method, request)
-
-    except Exception as e:
-        return {
-            'statusCode': 500,
-            'headers': {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*'
-            },
-            'body': '{"error": "Handler Error", "message": "' + str(e).replace('"', '\\"') + '"}'
+    def init_flask_env(self):
+        """Initialize Flask environment for request"""
+        path = self.path
+        method = self.command
+        headers = dict(self.headers)
+        
+        environ = {
+            'REQUEST_METHOD': method,
+            'PATH_INFO': urlparse(path).path,
+            'QUERY_STRING': urlparse(path).query,
+            'wsgi.input': self.rfile,
+            'wsgi.errors': self.wfile,
+            'wsgi.version': (1, 0),
+            'wsgi.multithread': False,
+            'wsgi.multiprocess': False,
+            'wsgi.run_once': True,
+            'wsgi.url_scheme': 'https',
+            'SERVER_NAME': 'vercel.app',
+            'SERVER_PORT': '443',
+            'HTTP_HOST': headers.get('Host', 'vercel.app'),
+            'HTTP_AUTHORIZATION': headers.get('Authorization', ''),
+            'CONTENT_TYPE': headers.get('Content-Type', ''),
+            'CONTENT_LENGTH': headers.get('Content-Length', '0'),
+            'HTTP_ORIGIN': headers.get('Origin', '*'),
         }
+        return environ
+
+    def handle_flask_response(self, response):
+        """Handle Flask response and send it to client"""
+        status_code = response.status_code
+        self.send_response(status_code)
+        
+        # Set headers
+        for header, value in response.headers.items():
+            self.send_header(header, value)
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+        self.end_headers()
+        
+        # Send response body
+        if response.data:
+            self.wfile.write(response.data)
+
+    def do_OPTIONS(self):
+        """Handle CORS preflight requests"""
+        self.send_response(200)
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+        self.end_headers()
+    def do_GET(self):
+        """Handle GET requests"""
+        try:
+            with flask_app.app_context():
+                environ = self.init_flask_env()
+                response = flask_app.wsgi_app(environ, lambda *args: None)
+                self.handle_flask_response(response)
+        except Exception as e:
+            logger.error(f"GET request error: {str(e)}")
+            self.send_error(500, str(e))
+
+    def do_POST(self):
+        """Handle POST requests"""
+        try:
+            with flask_app.app_context():
+                environ = self.init_flask_env()
+                response = flask_app.wsgi_app(environ, lambda *args: None)
+                self.handle_flask_response(response)
+        except Exception as e:
+            logger.error(f"POST request error: {str(e)}")
+            self.send_error(500, str(e))
+
+# Export for Vercel
+app = handler
 
 def handle_complex_endpoint(path, method, request):
     """Handle complex endpoints with delayed Flask import"""
