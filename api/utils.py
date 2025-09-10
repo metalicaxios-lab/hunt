@@ -6,7 +6,10 @@ from flask_mail import Message
 from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
 import qrcode
-from qr_utils import generate_qr_code_no_pil
+try:
+    from .qr_utils import generate_qr_code_no_pil
+except ImportError:
+    from qr_utils import generate_qr_code_no_pil
 import io
 import base64
 

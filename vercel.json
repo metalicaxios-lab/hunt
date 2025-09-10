@@ -44,7 +44,7 @@
   ],
   "env": {
     "NODE_ENV": "production",
-    "PYTHONPATH": "api",
+    "PYTHONPATH": "/var/task/api",
     "FLASK_DEBUG": "False",
     "VERCEL": "1",
     "VERCEL_ENV": "production"

@@ -3,8 +3,12 @@ from urllib.parse import parse_qs, urlparse
 import json
 import logging
 import os
-from app import create_app
-from models import db, Course, Registration, Student, User, Parent, Class, Enrollment
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from api.app import create_app
+from api.models import db, Course, Registration, Student, User, Parent, Class, Enrollment
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

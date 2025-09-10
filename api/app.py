@@ -9,14 +9,14 @@ from flask_cors import CORS
 # from werkzeug.middleware.proxy_fix import ProxyFix  # Commented out for Vercel compatibility
 
 # Import models and database
-from models import db
+from api.models import db
 
 # Import blueprints
-from auth import auth_bp
-from courses import courses_bp
-from admin import admin_bp
-from mobile import mobile_bp
-from contact import contact_bp
+from api.auth import auth_bp
+from api.courses import courses_bp
+from api.admin import admin_bp
+from api.mobile import mobile_bp
+from api.contact import contact_bp
 
 # Configure logging
 logging.basicConfig(
@@ -348,4 +348,3 @@ if __name__ == '__main__':
         threaded=True,
         use_reloader=app_instance.config['DEBUG']
     )
-
