@@ -132,12 +132,16 @@ def create_app(config_class=Config):
             'pool_pre_ping': True
         }
         
+        # Initialize SQLAlchemy with table reflection disabled
+        app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+        app.config['SQLALCHEMY_REFLECT_MODELS'] = False
+        
         # Initialize SQLAlchemy
         db.init_app(app)
         
         # Push application context
-        ctx = app.app_context()
-        ctx.push()
+        app_ctx = app.app_context()
+        app_ctx.push()
         
         # Initialize other extensions
         global jwt, mail
@@ -147,8 +151,21 @@ def create_app(config_class=Config):
         # Attach mail to app instance for use in utils
         app.mail = mail
         
+        @app.before_request
+        def create_session():
+            """Create a scoped session for each request"""
+            db.session = db.create_scoped_session()
+            
         @app.teardown_appcontext
         def shutdown_session(exception=None):
+            """Remove session at the end of each request"""
+            db.session.remove()
+            
+        @app.teardown_request
+        def teardown_request(exception=None):
+            """Clean up at the end of each request"""
+            if exception:
+                db.session.rollback()
             db.session.remove()
 
         # Register JWT error handlers

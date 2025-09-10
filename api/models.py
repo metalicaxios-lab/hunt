@@ -7,8 +7,13 @@ from api.database import db
 # Phone number validation regex
 PHONE_REGEX = r'^0(5|6|7)\d{8}$'
 
+# Base model class
+class BaseModel(db.Model):
+    __abstract__ = True
+    __table_args__ = {'extend_existing': True}
+
 # Database Models
-class User(db.Model):
+class User(BaseModel):
     __tablename__ = 'users'
 
     id = db.Column(db.Integer, primary_key=True)
