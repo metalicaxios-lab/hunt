@@ -337,20 +337,15 @@ def register_routes(app):
 # Create the application instance
 app = None
 
-def get_app():
-    """Get or create Flask app instance"""
-    global app
-    if app is None:
-        app = create_app()
-    return app
+# Initialize the Flask application for Vercel
+app = create_app()
 
 if __name__ == '__main__':
     # Development server configuration
-    app_instance = get_app()
-    app_instance.run(
+    app.run(
         host='0.0.0.0',
         port=int(os.environ.get('PORT', 5000)),
-        debug=app_instance.config['DEBUG'],
+        debug=app.config['DEBUG'],
         threaded=True,
-        use_reloader=app_instance.config['DEBUG']
+        use_reloader=app.config['DEBUG']
     )
